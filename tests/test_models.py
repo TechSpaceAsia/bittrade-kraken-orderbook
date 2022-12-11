@@ -1,5 +1,5 @@
 from bittrade_kraken_orderbook.models import Order, RepublishOrder
-from bittrade_kraken_orderbook.models.order import is_republish_order, find_index_by_price
+from bittrade_kraken_orderbook.models.order import is_republish_order, find_by_price, find_insert_index_by_price
 
 
 def test_is_republish_order():
@@ -10,8 +10,42 @@ def test_is_republish_order():
     assert is_republish_order(b)
 
 
-def test_find_index_by_price():
+def test_find_by_price():
     orders = [Order(str(i + 1), "", "") for i in range(30)]
-    assert find_index_by_price(orders, "5") == 4, 'Could not find "5"'
-    assert find_index_by_price(orders, "5.0") == 4, 'Could not find with different decimal'
-    assert find_index_by_price(orders, "5.5") == -1, 'Should not have found non-exact match'
+    assert find_by_price(orders, "1") == Order("1", "", ""), 'Could not find first element'
+    assert find_by_price(orders, "5") == Order("5", "", ""), 'Could not find "5"'
+    assert find_by_price(orders, "5.0") == Order("5", "", ""), 'Could not find with different decimal'
+    assert find_by_price(orders, "30") == Order("30", "", ""), 'Could not find last element'
+    assert find_by_price(orders, "5.5") == None, 'Should not have found non-exact match'
+    assert find_by_price(orders, "42") == None, 'Should not have found non-exact match outside range'
+
+    # With a descending order
+    orders = [Order(str(50 - i), "", "") for i in range(30)]
+    assert find_by_price(orders, "50") == Order("50", "", ""), 'Could not find first element'
+    assert find_by_price(orders, "46") == Order("46", "", ""), 'Could not find "5"'
+    assert find_by_price(orders, "44.0") == Order("44", "", ""), 'Could not find with different decimal'
+    assert find_by_price(orders, "21") == Order("21", "", ""), 'Could not find last element'
+    assert find_by_price(orders, "35.5") == None, 'Should not have found non-exact match'
+    assert find_by_price(orders, "10") == None, 'Should not have found non-exact match outside range'
+
+def test_find_insert_index_by_price():
+    orders = [Order(str(i + 1), "", "") for i in range(30)]
+    assert find_insert_index_by_price(orders, "0.1", False) == 0, 'Lower than first should give index 0'
+    assert find_insert_index_by_price(orders, "1.0", False) == 0, 'Equal to first should give index 0'
+    assert find_insert_index_by_price(orders, "5", False) == 4, 'Exact match should give correct index'
+    assert find_insert_index_by_price(orders, "10.2", False) == 10, 'Not exact match should give index one higher than nearest'
+    assert find_insert_index_by_price(orders, "30",
+                                      False) == 29, 'Equal to last should give last index'
+    assert find_insert_index_by_price(orders, "35",
+                                      False) == 30, 'Higher than highest should give index len(original)'
+
+    orders = [Order(str(100 - i), "", "") for i in range(30)]
+    assert find_insert_index_by_price(orders, "100.1", True) == 0, 'Higher than first should give index 0'
+    assert find_insert_index_by_price(orders, "100.000", True) == 0, 'Equal to first should give index 0'
+    assert find_insert_index_by_price(orders, "90", True) == 10, 'Exact match should give correct index'
+    assert find_insert_index_by_price(orders, "85.5",
+                                      True) == 15, 'Not exact match should give index one higher than nearest'
+    assert find_insert_index_by_price(orders, "71",
+                                      True) == 29, 'Equal to last should give last index'
+    assert find_insert_index_by_price(orders, "42",
+                                      True) == 30, 'Lower than lowest should give index len(original)'
