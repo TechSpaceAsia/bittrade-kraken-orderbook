@@ -2,7 +2,8 @@ from decimal import Decimal
 from typing import Literal, List, Dict, Optional
 
 from bittrade_kraken_orderbook.models import OrderBook
-from bittrade_kraken_orderbook.models.order import GenericOrder, Order, find_by_price, get_volume, get_price
+from bittrade_kraken_orderbook.models.order import GenericOrder, Order, find_by_price, get_volume, get_price, \
+    find_insert_index_by_price
 
 from logging import getLogger
 
@@ -10,7 +11,7 @@ LOGGER = getLogger(__name__)
 
 
 def update_side(side: Literal['bids', 'asks'], order_book: OrderBook, updated_orders: List[List[str]]):
-    orders_list: List[Order] = getattr(order_book, side)
+    current_orders: List[Order] = getattr(order_book, side)
     order: List[str]
     is_descending = side == 'bids'
     for order in updated_orders:
@@ -18,20 +19,35 @@ def update_side(side: Literal['bids', 'asks'], order_book: OrderBook, updated_or
         price = get_price(order)
         if volume == 0:
             # Removing order
-            matching_order = find_by_price(orders_list, price)
+            matching_order = find_by_price(current_orders, price)
             if not matching_order:
-                LOGGER.error('Expected to find an order with price %s but did not. Orders: %s', price, orders_list)
+                LOGGER.error('Expected to find an order with price %s but did not. Orders: %s', price, current_orders)
             else:
-                orders_list.remove(matching_order)
+                current_orders.remove(matching_order)
         else:
             # Matching order may not exist
-            order_index: int
-            matching_order: Optional[Order]
-            order_index, matching_order = find_insert_index_by_price(orders_list, price, is_descending=is_descending)
+            order_index = find_insert_index_by_price(current_orders, price, is_descending=is_descending)
+            new_order = Order(*order[:3])
+            # Could be an exact match
+            try:
+                order_at_index = current_orders[order_index]
+                if Decimal(order_at_index.price) == Decimal(price):
+                    # That's an update
+                    current_orders[order_index] = new_order
+                else:
+                    # insert
+                    current_orders.insert(order_index, new_order)
+                    # Skim the book to same length as before
+                    current_orders.pop()
+            except IndexError as exc:
+                # means we are appending .... this should never happen
+                LOGGER.error('Order to be added exceeds book length: %s, %s', current_orders, price)
+                raise exc
+
+
 
 
 def update_bids(order_book: OrderBook, payload: Dict):
-    # Bids come in descending order
     update_side('bids', order_book, payload['b'])
 
 

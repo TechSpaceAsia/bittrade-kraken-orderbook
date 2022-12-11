@@ -1,7 +1,11 @@
 from typing import List
 
+import pytest
+
 from bittrade_kraken_orderbook.compute import compute_order_book
 from bittrade_kraken_orderbook.models import OrderBook, Order, Message
+
+from copy import deepcopy
 
 
 SAMPLE_BOOK_SNAPSHOT = [
@@ -336,7 +340,7 @@ def test_remove_bid_at_given_price():
         "1620209398.092586"
     ]], "c": "2060521393"}, "book-25", "XRP/USD"]
     order_book = base_order_book()
-    old_asks = order_book.asks
+    old_asks = deepcopy(order_book.asks)
     compute_order_book(order_book, message)
     assert order_book.asks == old_asks
     assert order_book.bids == list_to_orders(
@@ -472,7 +476,7 @@ def test_remove_bid_at_given_price():
         "1620209398.092586"
     ]], "c": "2060521393"}, "book-25", "XRP/USD"]
     order_book = base_order_book()
-    old_asks = order_book.asks
+    old_asks = deepcopy(order_book.asks)
     compute_order_book(order_book, message)
     assert order_book.asks == old_asks
     assert order_book.bids == list_to_orders(
@@ -608,7 +612,7 @@ def test_update_existing_bid():
     ]], "c": "2060521393"}, "book-25", "XRP/USD"]
 
     order_book = base_order_book()
-    old_asks = order_book.asks
+    old_asks = deepcopy(order_book.asks)
     compute_order_book(order_book, message)
     assert order_book.asks == old_asks
     assert order_book.bids == list_to_orders(
@@ -740,3 +744,301 @@ def test_update_existing_bid():
             ]
         ]
     ), 'Expected line for 331.48 to have been updated'
+
+def test_create_bid_higher_than_highest():
+    message = [544, {"b": [["332.08000", "148.65012786", "1620264196.038137"]], "c": "2060521393"}, "book-25",
+               "XRP/USD"]
+    order_book = base_order_book()
+    old_asks = deepcopy(order_book.asks)
+    old_bids_size = len(order_book.bids)
+    compute_order_book(order_book, message)
+    assert order_book.asks == old_asks
+    assert len(order_book.bids) == old_bids_size, 'It should push out the extraneous bid'
+    assert order_book.bids[0] == Order("332.08000", "148.65012786", "1620264196.038137")
+
+def test_fails_to_create_bid_lower_than_lowest():
+    message = [544, {"b": [[
+                "331.28000", # lower
+                "7.12435597",
+                "1620209397.013228"
+            ]], "c": "not a valid CRC btw"}, "book-25",
+               "XRP/USD"]
+    order_book = base_order_book()
+    old_asks = deepcopy(order_book.asks)
+    old_bids = deepcopy(order_book.bids)
+    with pytest.raises(IndexError):
+        compute_order_book(order_book, message)
+    assert order_book.asks == old_asks
+    assert order_book.bids == old_bids
+
+def test_create_multiple_bids_in_the_middle():
+    message = [544, {"b": [[
+        "331.70000",
+        "8.123",
+        "1620209397.284868"
+    ], [
+        "331.57000",
+        "56.00000000",
+        "1620209397.325755"
+    ]], "c": "2060521393"}, "book-25", "XRP/USD"]
+    order_book = base_order_book()
+    old_asks = deepcopy(order_book.asks)
+    compute_order_book(order_book, message)
+    assert order_book.asks == old_asks
+    assert order_book.bids == list_to_orders([
+            [
+                "332.05000",
+                "0.10000004",
+                "1620209398.000896"
+            ],
+            [
+                "331.93000",
+                "3.79500000",
+                "1620209397.868848"
+            ],
+            [
+                "331.86000",
+                "15.06083688",
+                "1620209397.537775"
+            ],
+            [
+                "331.85000",
+                "42.59412581",
+                "1620209398.092586"
+            ],
+            [
+                "331.81000",
+                "15.81284116",
+                "1620209397.639543"
+            ],
+            [
+                "331.78000",
+                "22.56148095",
+                "1620209378.672652"
+            ],
+            [
+                "331.77000",
+                "45.18820751",
+                "1620209398.175159"
+            ],
+            [
+                "331.73000",
+                "60.00000000",
+                "1620209397.593080"
+            ],
+            [
+                "331.72000",
+                "18.64475577",
+                "1620209393.209003"
+            ],
+            [
+                "331.71000",
+                "7.85455545",
+                "1620209397.284868"
+            ],
+            [
+                "331.70000",
+                "8.123",
+                "1620209397.284868"
+            ],
+            [
+                "331.69000",
+                "0.24000000",
+                "1620209397.040574"
+            ],
+            [
+                "331.68000",
+                "22.60271757",
+                "1620209397.537063"
+            ],
+            [
+                "331.66000",
+                "30.10449556",
+                "1620209392.689025"
+            ],
+            [
+                "331.65000",
+                "3.13698269",
+                "1620209398.165483"
+            ],
+            [
+                "331.64000",
+                "6.27012967",
+                "1620209397.426005"
+            ],
+            [
+                "331.63000",
+                "4.57244860",
+                "1620209393.472758"
+            ],
+            [
+                "331.60000",
+                "30.34947044",
+                "1620209393.801833"
+            ],
+            [
+                "331.58000",
+                "109.95794808",
+                "1620209397.824771"
+            ],
+            [
+                "331.57000",
+                "56.00000000",
+                "1620209397.325755"
+            ],
+            [
+                "331.56000",
+                "40.00000000",
+                "1620209393.325755"
+            ],
+            [
+                "331.48000",
+                "419.28750000",
+                "1620209398.208600"
+            ],
+            [
+                "331.45000",
+                "23.54278309",
+                "1620209397.407166"
+            ],
+            [
+                "331.43000",
+                "35.00000000",
+                "1620209391.274375"
+            ],
+            [
+                "331.37000",
+                "2.96136000",
+                "1620209346.500518"
+            ]
+        ]
+
+    )
+
+def test_remove_multiple_asks_at_given_price():
+    message = [1234,{"a":[[
+            "332.14000",
+            "0.00000",
+            "1620209398.092586"
+        ], ["332.26000", "0.00000", "..."]],"c":"2060521393"},"book-25","LTC/USD"]
+    order_book = base_order_book()
+    old_bids = deepcopy(order_book.bids)
+    compute_order_book(order_book, message)
+    assert order_book.bids == old_bids, 'Bids should not change'
+    assert order_book.asks == list_to_orders([
+            [
+                "332.06000",
+                "12.04845078",
+                "1620209398.055437"
+            ],
+            [
+                "332.11000",
+                "22.59824620",
+                "1620209391.608055"
+            ],
+            [
+                "332.13000",
+                "15.81125585",
+                "1620209397.964279"
+            ],
+            [
+                "332.22000",
+                "22.58624441",
+                "1620209390.221912"
+            ],
+            [
+                "332.24000",
+                "4.54776660",
+                "1620209392.375153"
+            ],
+            [
+                "332.27000",
+                "3.13701928",
+                "1620209398.309052"
+            ],
+            [
+                "332.28000",
+                "22.58163073",
+                "1620209397.046942"
+            ],
+            [
+                "332.34000",
+                "13.00000000",
+                "1620209395.958801"
+            ],
+            [
+                "332.37000",
+                "22.00100000",
+                "1620209393.528951"
+            ],
+            [
+                "332.43000",
+                "4.45221540",
+                "1620209397.796670"
+            ],
+            [
+                "332.44000",
+                "0.24250000",
+                "1620209398.200235"
+            ],
+            [
+                "332.47000",
+                "254.26030000",
+                "1620209396.216759"
+            ],
+            [
+                "332.48000",
+                "54.93236058",
+                "1620209396.121353"
+            ],
+            [
+                "332.49000",
+                "40.00000000",
+                "1620209393.524592"
+            ],
+            [
+                "332.52000",
+                "7.85582709",
+                "1620209398.151178"
+            ],
+            [
+                "332.53000",
+                "123.39560000",
+                "1620209391.821118"
+            ],
+            [
+                "332.56000",
+                "419.74000000",
+                "1620209398.208662"
+            ],
+            [
+                "332.67000",
+                "3.10261180",
+                "1620209398.342636"
+            ],
+            [
+                "332.68000",
+                "32.96408291",
+                "1620209394.039751"
+            ],
+            [
+                "332.72000",
+                "209.76070000",
+                "1620209396.358939"
+            ],
+            [
+                "332.81000",
+                "26.43040230",
+                "1620209397.352421"
+            ],
+            [
+                "332.82000",
+                "13.37399921",
+                "1620209397.753358"
+            ],
+            [
+                "333.03000",
+                "161.02307992",
+                "1620209395.328583"
+            ]
+        ]), 'Should have removed 2 asks'
