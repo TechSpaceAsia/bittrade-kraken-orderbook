@@ -14,6 +14,7 @@ def update_side(side: Literal['bids', 'asks'], order_book: OrderBook, updated_or
     current_orders: List[Order] = getattr(order_book, side)
     order: List[str]
     is_descending = side == 'bids'
+    book_length = len(current_orders)
     for order in updated_orders:
         volume = Decimal(get_volume(order))
         price = get_price(order)
@@ -37,12 +38,11 @@ def update_side(side: Literal['bids', 'asks'], order_book: OrderBook, updated_or
                 else:
                     # insert
                     current_orders.insert(order_index, new_order)
-                    # Skim the book to same length as before
-                    current_orders.pop()
             except IndexError as exc:
-                # means we are appending .... this should never happen
-                LOGGER.error('Order to be added exceeds book length: %s, %s', current_orders, price)
-                raise exc
+                # means we are appending .... this happens when one order is removed and thus another one appended
+                current_orders.append(new_order)
+    # Skim the book to same length as before
+    setattr(order_book, side, current_orders[:book_length])
 
 
 
