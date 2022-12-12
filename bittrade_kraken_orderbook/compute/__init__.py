@@ -25,17 +25,14 @@ def compute_order_book(order_book: OrderBook, message: List) -> None:
     """
     payload = get_payload(message)
     with lock:
-        if is_two_side_update_message(message):
-            message: TwoSideUpdateMessage
-            pass
-        else:
-            if is_snapshot_payload(payload):
-                load_snapshot(order_book, payload)
-                return
-            if is_bids_update_payload(payload):
-                update_bids(order_book, payload)
-            if is_asks_update_payload(payload):
-                update_asks(order_book, payload)
+        if is_snapshot_payload(payload):
+            load_snapshot(order_book, payload)
+            return
+        # do not return within `if` since message can actually be both sides
+        if is_bids_update_payload(payload):
+            update_bids(order_book, payload)
+        if is_asks_update_payload(payload):
+            update_asks(order_book, payload)
 
 
 
