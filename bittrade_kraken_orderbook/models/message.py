@@ -26,5 +26,10 @@ def get_payload(raw_message):
         return dict(**raw_message[1], **raw_message[2])
     return raw_message[1]
 
+
+def get_checksum(raw_message):
+    return get_payload(raw_message).get('c')
+
+
 def is_two_side_update_message(message: GenericMessage) -> bool:
     return len(message) == 5

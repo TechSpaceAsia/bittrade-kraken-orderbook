@@ -1,4 +1,5 @@
 from bittrade_kraken_orderbook.models import Order, RepublishOrder
+from bittrade_kraken_orderbook.models.message import get_checksum
 from bittrade_kraken_orderbook.models.order import is_republish_order, find_by_price, find_insert_index_by_price
 
 
@@ -10,14 +11,19 @@ def test_is_republish_order():
     assert is_republish_order(b)
 
 
+def test_get_checksum():
+    assert get_checksum([1, {"a": [], "c": "lala"}, "book-25", "XRP/USD"]) == "lala"
+    assert get_checksum([1, {"a": []}, {"b": [], "c": "red"}, "book-25", "XRP/USD"]) == "red"
+
+
 def test_find_by_price():
     orders = [Order(str(i + 1), "", "") for i in range(30)]
     assert find_by_price(orders, "1") == Order("1", "", ""), 'Could not find first element'
     assert find_by_price(orders, "5") == Order("5", "", ""), 'Could not find "5"'
     assert find_by_price(orders, "5.0") == Order("5", "", ""), 'Could not find with different decimal'
     assert find_by_price(orders, "30") == Order("30", "", ""), 'Could not find last element'
-    assert find_by_price(orders, "5.5") == None, 'Should not have found non-exact match'
-    assert find_by_price(orders, "42") == None, 'Should not have found non-exact match outside range'
+    assert find_by_price(orders, "5.5") is None, 'Should not have found non-exact match'
+    assert find_by_price(orders, "42") is None, 'Should not have found non-exact match outside range'
 
     # With a descending order
     orders = [Order(str(50 - i), "", "") for i in range(30)]
@@ -25,8 +31,8 @@ def test_find_by_price():
     assert find_by_price(orders, "46") == Order("46", "", ""), 'Could not find "5"'
     assert find_by_price(orders, "44.0") == Order("44", "", ""), 'Could not find with different decimal'
     assert find_by_price(orders, "21") == Order("21", "", ""), 'Could not find last element'
-    assert find_by_price(orders, "35.5") == None, 'Should not have found non-exact match'
-    assert find_by_price(orders, "10") == None, 'Should not have found non-exact match outside range'
+    assert find_by_price(orders, "35.5") is None, 'Should not have found non-exact match'
+    assert find_by_price(orders, "10") is None, 'Should not have found non-exact match outside range'
 
 def test_find_insert_index_by_price():
     orders = [Order(str(i + 1), "", "") for i in range(30)]

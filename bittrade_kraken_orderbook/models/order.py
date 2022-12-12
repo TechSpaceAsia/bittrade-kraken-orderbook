@@ -1,7 +1,5 @@
 from decimal import Decimal
-from typing import NamedTuple, Union, List, Optional, Tuple
-from bisect import bisect_left
-from bittrade_kraken_orderbook.models.bisection_extended import index
+from typing import NamedTuple, Union, List, Optional
 
 class Order(NamedTuple):
     price: str
@@ -28,6 +26,7 @@ def get_volume(order: RawOrder):
 
 def get_price(order: RawOrder):
     return order[0]
+
 
 def find_by_price(orders_list: List[GenericOrder], price: str) -> Optional[Order]:
     for order in orders_list:
