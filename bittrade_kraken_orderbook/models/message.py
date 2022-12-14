@@ -1,5 +1,6 @@
 from typing import Union, NamedTuple, Any
 
+
 class Message(NamedTuple):
     channel_id: int
     payload: Any
@@ -33,6 +34,7 @@ def get_checksum(raw_message):
 
 def get_pair(raw_message):
     return raw_message[-1]
+
 
 def is_two_side_update_message(message: GenericMessage) -> bool:
     return len(message) == 5

@@ -1,14 +1,17 @@
 from decimal import Decimal
-from typing import NamedTuple, Union, List, Optional
+import dataclasses
+from typing import Union, List, Optional
 
 
-class Order(NamedTuple):
+@dataclasses.dataclass
+class Order:
     price: str
     volume: str
     timestamp: str
 
 
-class RepublishOrder(NamedTuple):
+@dataclasses.dataclass
+class RepublishOrder:
     price: str
     volume: str
     timestamp: str
@@ -20,8 +23,10 @@ GenericOrder = Union[Order, RepublishOrder]
 RawOrder = List[str]
 
 
-def is_republish_order(order: GenericOrder) -> bool:
-    return len(order) == 4
+def is_republish_order(order: GenericOrder | RawOrder) -> bool:
+    if type(order) == list:
+        return len(order) == 4
+    return hasattr(order, 'republish')
 
 
 def get_volume(order: RawOrder):

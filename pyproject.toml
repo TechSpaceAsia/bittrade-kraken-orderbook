@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bittrade-kraken-orderbook"
-version = "1.0.1"
+version = "1.0.2"
 description = ""
 authors = ["mat <matt@techspace.asia>"]
 
