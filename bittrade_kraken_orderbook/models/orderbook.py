@@ -11,5 +11,11 @@ class OrderBook:
     bids: List[Order] = dataclasses.field(default_factory=list)
 
 
+@dataclasses.dataclass
+class MetaOrderBook(OrderBook):
+    timestamp: str = ''
+    pair: str = ''
+
+
 def is_snapshot_payload(payload: Any):
     return 'as' in payload

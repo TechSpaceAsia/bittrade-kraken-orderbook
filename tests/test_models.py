@@ -1,5 +1,5 @@
 from bittrade_kraken_orderbook.models import Order, RepublishOrder
-from bittrade_kraken_orderbook.models.message import get_checksum
+from bittrade_kraken_orderbook.models.message import get_checksum, get_pair
 from bittrade_kraken_orderbook.models.order import is_republish_order, find_by_price, find_insert_index_by_price
 
 
@@ -14,6 +14,14 @@ def test_is_republish_order():
 def test_get_checksum():
     assert get_checksum([1, {"a": [], "c": "lala"}, "book-25", "XRP/USD"]) == "lala"
     assert get_checksum([1, {"a": []}, {"b": [], "c": "red"}, "book-25", "XRP/USD"]) == "red"
+    assert get_checksum([432, {'a': [['76.28000', '0.00000000', '1670883993.134315'], ['76.73000', '0.46274251', '1670883428.136306', 'r']], 'c': '2582013099'}, 'book-25', 'LTC/USD']) == "2582013099"
+
+def test_get_pair():
+    assert get_pair([432, {'a': [['76.28000', '0.00000000', '1670883993.134315'], ['76.73000', '0.46274251', '1670883428.136306', 'r']], 'c': '2582013099'}, 'book-25', 'LTC/USD']) == "LTC/USD"
+    assert get_pair([432, {
+        'a': [['76.28000', '0.00000000', '1670883993.134315'], ['76.73000', '0.46274251', '1670883428.136306', 'r']]}, {"b": [],
+        'c': '2582013099'}, 'book-25', 'XRP/USD']) == "XRP/USD"
+
 
 
 def test_find_by_price():

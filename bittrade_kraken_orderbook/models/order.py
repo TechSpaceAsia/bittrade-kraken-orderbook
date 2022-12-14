@@ -1,6 +1,7 @@
 from decimal import Decimal
 from typing import NamedTuple, Union, List, Optional
 
+
 class Order(NamedTuple):
     price: str
     volume: str
@@ -17,8 +18,11 @@ class RepublishOrder(NamedTuple):
 GenericOrder = Union[Order, RepublishOrder]
 
 RawOrder = List[str]
+
+
 def is_republish_order(order: GenericOrder) -> bool:
     return len(order) == 4
+
 
 def get_volume(order: RawOrder):
     return order[1]
@@ -50,10 +54,8 @@ def find_insert_index_by_price(orders: List[GenericOrder], price: str, is_descen
         if is_descending:
             return Decimal(o.price) > price_decimal
         return Decimal(o.price) < price_decimal
+
     for i, order in enumerate(orders):
         if not is_order_before_price(order):
             return i
     return len(orders)
-
-
-
