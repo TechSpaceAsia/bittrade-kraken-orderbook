@@ -280,12 +280,12 @@ def base_order_book():
 
 
 def test_equality():
-    a = OrderBook(asks=[Order('1', '2', '3'), Order('4', '5', '6')],
-                  bids=[Order('-1', '2', '3'), Order('-4', '5', '6')])
-    b = OrderBook(asks=[Order('1', '2', '3'), Order('4', '5', '6')],
-                  bids=[Order('-1', '2', '3'), Order('-4', '5', '6')])
-    c = OrderBook(asks=[Order('3', '2', '3'), Order('4', '5', '6')],
-                  bids=[Order('-1', '2', '3'), Order('-4', '5', '6')])
+    a = OrderBook(asks=[('1', '2', '3'), ('4', '5', '6')],
+                  bids=[('-1', '2', '3'), ('-4', '5', '6')])
+    b = OrderBook(asks=[('1', '2', '3'), ('4', '5', '6')],
+             bids=[('-1', '2', '3'), ('-4', '5', '6')])
+    c = OrderBook(asks=[('3', '2', '3'), ('4', '5', '6')],
+             bids=[('-1', '2', '3'), ('-4', '5', '6')])
 
     assert a == b
     assert a != c
@@ -327,12 +327,12 @@ def test_initial_snapshot():
 
     assert order_book == OrderBook(
         asks=[
-            Order("332.06000", "12.04845078", "1620209398.055437"),
-            Order("332.11000", "22.59824620", "1620209391.608055")
+            ("332.06000", "12.04845078", "1620209398.055437"),
+            ("332.11000", "22.59824620", "1620209391.608055")
         ],
         bids=[
-            Order("332.05000", "0.10000004", "1620209398.000896"),
-            Order("331.93000", "3.79500000", "1620209397.868848")
+            ("332.05000", "0.10000004", "1620209398.000896"),
+            ("331.93000", "3.79500000", "1620209397.868848")
         ]
     )
 
@@ -762,7 +762,7 @@ def test_create_bid_higher_than_highest():
     compute_order_book(order_book, message)
     assert order_book.asks == old_asks
     assert len(order_book.bids) == old_bids_size, 'It should push out the extraneous bid'
-    assert order_book.bids[0] == Order("332.08000", "148.65012786", "1620264196.038137")
+    assert order_book.bids[0] == ("332.08000", "148.65012786", "1620264196.038137")
 
 
 def test_create_multiple_bids_in_the_middle():
@@ -1184,7 +1184,7 @@ def test_create_ask_lower_than_lowest():
     old_bids = deepcopy(order_book.bids)
     compute_order_book(order_book, message)
     assert order_book.bids == old_bids, 'Bids should not change'
-    assert order_book.asks[0] == Order(*["332.01", "56.322", "1620364196.038137"])
+    assert order_book.asks[0] == ("332.01", "56.322", "1620364196.038137")
 
 
 def test_create_multiple_asks_in_the_middle():

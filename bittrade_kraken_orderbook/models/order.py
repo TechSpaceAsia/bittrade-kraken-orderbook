@@ -1,46 +1,29 @@
 from decimal import Decimal
 import dataclasses
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Tuple
 
+Order = Tuple[str, str, str]
 
-@dataclasses.dataclass
-class Order:
-    price: str
-    volume: str
-    timestamp: str
-
-
-@dataclasses.dataclass
-class RepublishOrder:
-    price: str
-    volume: str
-    timestamp: str
-    republish = "r"
-
+RepublishOrder = Tuple[str, str, str, str]
 
 GenericOrder = Union[Order, RepublishOrder]
 
-RawOrder = List[str]
+def is_republish_order(order: GenericOrder) -> bool:
+    return len(order) == 4
 
 
-def is_republish_order(order: GenericOrder | RawOrder) -> bool:
-    if type(order) == list:
-        return len(order) == 4
-    return hasattr(order, 'republish')
-
-
-def get_volume(order: RawOrder):
+def get_volume(order: GenericOrder):
     return order[1]
 
 
-def get_price(order: RawOrder):
+def get_price(order: GenericOrder):
     return order[0]
 
 
 def find_by_price(orders_list: List[GenericOrder], price: str) -> Optional[Order]:
+    price = Decimal(price)
     for order in orders_list:
-        order_price = Decimal(order.price)
-        price = Decimal(price)
+        order_price = Decimal(get_price(order))
         if price == order_price:
             return order
     return None
@@ -56,9 +39,10 @@ def find_insert_index_by_price(orders: List[GenericOrder], price: str, is_descen
     price_decimal = Decimal(price)
 
     def is_order_before_price(o: GenericOrder):
+        price = Decimal(get_price(order))
         if is_descending:
-            return Decimal(o.price) > price_decimal
-        return Decimal(o.price) < price_decimal
+            return price > price_decimal
+        return price < price_decimal
 
     for i, order in enumerate(orders):
         if not is_order_before_price(order):

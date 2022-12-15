@@ -28,11 +28,11 @@ def update_side(side: Literal['bids', 'asks'], order_book: OrderBook, updated_or
         else:
             # Matching order may not exist
             order_index = find_insert_index_by_price(current_orders, price, is_descending=is_descending)
-            new_order = Order(*order[:3])
+            new_order = tuple(order[:3])
             # Could be an exact match
             try:
                 order_at_index = current_orders[order_index]
-                if Decimal(order_at_index.price) == Decimal(price):
+                if Decimal(get_price(order_at_index)) == Decimal(price):
                     # That's an update
                     current_orders[order_index] = new_order
                 else:

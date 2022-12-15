@@ -5,17 +5,17 @@ from tests.helpers import list_to_orders
 
 
 def test_stringify():
-    assert stringify_single_entry(Order(
+    assert stringify_single_entry((
         "321.72000",
         "47.86155337",
         "1620877029.127168"
     )) == '321720004786155337'
-    assert stringify_single_entry(Order(
+    assert stringify_single_entry((
         "0.0072000",
         "47.86155337",
         "1620877029.127168"
     )) == '720004786155337'
-    assert stringify_single_entry(Order(
+    assert stringify_single_entry((
         "321.61000",
         "5.47500000",
         "1620877029.047487"
